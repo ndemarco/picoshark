@@ -152,6 +152,8 @@ Alternatively, capture to a file with a terminal emulator (PuTTY in raw/binary l
 
 The LDCN dissector decodes PicoShark captures for LDCN traffic. For other protocols, write a dissector for **DLT_USER0 (link type 147)** using the same registration pattern.
 
+The PicoShark path decodes host-to-device command packets. Device-to-host status packets (headerless) are decoded by the USB front-end `dissector/ldcn_usb.lua`, see `docs/USBPCAP.md`.
+
 ### Installation
 
 | OS      | Path |
@@ -160,7 +162,9 @@ The LDCN dissector decodes PicoShark captures for LDCN traffic. For other protoc
 | macOS   | `~/.local/lib/wireshark/plugins/ldcn.lua` |
 | Windows | `%APPDATA%\Wireshark\plugins\ldcn.lua` |
 
-Copy `dissector/ldcn.lua` from this repository to the appropriate path, then reload:
+Copy `dissector/ldcn.lua` **and** `dissector/ldcn_core.lua` from this repository
+to that folder (the core file holds the shared decoder; `ldcn.lua` only handles
+the PicoShark envelope), then reload:
 
 **Wireshark → Analyze → Reload Lua Plugins** (or `Ctrl+Shift+L`)
 
@@ -172,9 +176,14 @@ Copy `dissector/ldcn.lua` from this repository to the appropriate path, then rel
 | `ldcn.channel == 0` | Packets seen on CH0 |
 | `ldcn.channel == 1` | Packets seen on CH1 |
 | `ldcn.address == 0x01` | Traffic to/from device address 1 |
-| `ldcn.cmd_value == 0x0A` | Set Baud Rate commands |
-| `ldcn.checksum_valid == false` | Checksum errors |
+| `ldcn.cmd == 0x0A` | Set Baud Rate commands |
+| `ldcn.checksum.valid == 0` | Checksum errors |
 | `ldcn.flags != 0` | Any flagged packets (errors, truncated, framing) |
+
+Command data is decoded per device type (servo or I/O family); set the
+**LDCN → Device types by address** preference as described in
+`docs/USBPCAP.md`, which also covers capturing the same bus from the host side
+through a USB-to-RS485 converter with USBPcap.
 
 ---
 
